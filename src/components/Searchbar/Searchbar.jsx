@@ -1,4 +1,4 @@
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 
 import { SearchForm } from 'SearchForm/SearchForm';
 import * as S from './Searchbar.styled';
