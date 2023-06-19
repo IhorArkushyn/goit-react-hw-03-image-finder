@@ -1,79 +1,87 @@
 import { Component } from 'react';
-// import { toast } from 'react-toastify';
-// import 'react-toastify/dist/ReactToastify.css';
-import { fetchPictures } from 'helpers/api';
-// import Button from './Button/Button';
-// import { Modal } from 'components/Modal/Modal';
-// import Loader from './Loader/Loader';
-import { Searchbar } from 'components/Searchbar/Searchbar';
-import { GalleryItem } from 'components/ImageGalleryItem/ImageGalleryItem';
-import { ImageGallery } from 'components/ImageGallery/ImageGallery';
+
 import { ToastContainer } from 'react-toastify';
-// import * as S from './App.styled';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-// import { nanoid } from 'nanoid';
+import { Button } from 'components/Button/Button';
+import { getImages } from 'helpers/api';
+import { Loader } from 'components/Loader/Loader';
+import { Searchbar } from 'components/Searchbar/Searchbar';
+import { ImageGallery } from 'components/ImageGallery/ImageGallery';
 
-export class App extends Component {
+import * as S from './App.styled';
+
+class App extends Component {
   state = {
-    searchPromt: '',
-    page: 1,
-    imagesArr: [],
-    totalImages: 0,
-    status: 'idle',
+    searchName: '',
+    images: [],
+    currentPage: 1,
+    error: null,
+    isLoading: false,
+    totalPages: 0,
   };
 
-  submitHandler = evt => {
-    evt.preventDefault();
-    this.setState(
-      { searchPromt: evt.target.elements.search.value.trim(), page: 1 },
-      async () => {
-        if (!this.state.searchPromt) {
-          return;
-        }
-        try {
-          this.setState({ status: 'pending' });
-          const images = await fetchPictures(
-            this.state.searchPromt,
-            this.state.page
-          );
-          this.setState({
-            imagesArr: images.data.hits,
-            totalImages: images.data.totalHits,
-            status: 'resolved',
-          });
-        } catch (e) {
-          this.setState({ status: 'rejected' });
-        }
-      }
-    );
+  componentDidUpdate(_, prevState) {
+    if (
+      prevState.searchName !== this.state.searchName ||
+      prevState.currentPage !== this.state.currentPage
+    ) {
+      this.addImages();
+    }
+  }
+
+  loadMore = () => {
+    this.setState(prevState => ({
+      currentPage: prevState.currentPage + 1,
+    }));
   };
 
-  loadMoreImg = () => {
-    this.setState({ page: this.state.page + 1 }, async () => {
-      try {
-        const images = await fetchPictures(
-          this.state.searchPromt,
-          this.state.page
-        );
-        this.setState(prevState => ({
-          imagesArr: [...prevState.imagesArr, ...images.data.hits],
-        }));
-      } catch (e) {
-        alert('Something went wrong');
-      }
+  handleSubmit = query => {
+    this.setState({
+      searchName: query,
+      images: [],
+      currentPage: 1,
     });
   };
 
+  addImages = async () => {
+    const { searchName, currentPage } = this.state;
+    try {
+      this.setState({ isLoading: true });
+
+      const data = await getImages(searchName, currentPage);
+
+      if (data.hits.length === 0) {
+        return toast.info('Sorry image not found...');
+      }
+
+      this.setState(state => ({
+        images: [...state.images, ...data.hits],
+        isLoading: false,
+        error: '',
+        totalPages: Math.ceil(data.totalHits / 12),
+      }));
+    } catch (error) {
+      this.setState({ error: 'Something went wrong!' });
+    } finally {
+      this.setState({ isLoading: false });
+    }
+  };
+
   render() {
+    const { images, isLoading, currentPage, totalPages } = this.state;
+
     return (
-      <>
-        <Searchbar />
-        <ImageGallery>
-          <GalleryItem />
-        </ImageGallery>
-        {/* modal */}
+      <S.Container>
+        <Searchbar onSubmit={this.handleSubmit} />
+        <ImageGallery images={images} />
+        {isLoading && <Loader />}
+        {images.length > 0 && totalPages !== currentPage && !isLoading && (
+          <Button onClick={this.loadMore} />
+        )}
         <ToastContainer autoClose={3000} theme="colored" />
-      </>
+      </S.Container>
     );
   }
 }

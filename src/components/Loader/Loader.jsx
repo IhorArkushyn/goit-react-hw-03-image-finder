@@ -1,10 +1,9 @@
-// import React from 'react';
 import { Vortex } from 'react-loader-spinner';
-import { LoadWrapper } from './Loader.styled';
+import * as S from './Loader.styled';
 
 export const Loader = () => {
   return (
-    <LoadWrapper>
+    <S.LoadWrapper>
       <Vortex
         visible={true}
         height="80"
@@ -14,6 +13,6 @@ export const Loader = () => {
         wrapperClass="vortex-wrapper"
         colors={['red', 'green', 'blue', 'yellow', 'orange', 'purple']}
       />
-    </LoadWrapper>
+    </S.LoadWrapper>
   );
 };

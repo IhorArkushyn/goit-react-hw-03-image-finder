@@ -1,7 +1,22 @@
-// import * as S from './ImageGallery.styled';
+import PropTypes from 'prop-types';
+import * as S from './ImageGallery.styled';
 
-export const ImageGallery = () => {
+import { ImageGalleryItem } from 'components/ImageGalleryItem/ImageGalleryItem';
+
+export const ImageGallery = ({ images }) => {
   return (
-    <ul className="gallery">{/* <!-- Набір <li> із зображеннями --> */}</ul>
+    <S.Gallery>
+      {images.map(image => (
+        <ImageGalleryItem key={image.id} image={image} />
+      ))}
+    </S.Gallery>
   );
+};
+
+ImageGallery.propTypes = {
+  images: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+    })
+  ).isRequired,
 };
